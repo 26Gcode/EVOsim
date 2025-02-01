@@ -1,61 +1,22 @@
 import pygame
-import numpy
-from pygame import Vector2
-import random
+import numpy as np
 
-screen_size = Vector2(800,600)
-
-class Particle:
-    def __init__(self, size, color, position):
-        self.size = size
-        self.color = color
-        self.position = Vector2(position)
-        
-class ParticleManager:
-    def __init__(self):
-        self.particles = []
-
-    def update(self):
-        test = 1
-
-    def add(self, particles):
-        self.particles.extend(particles)
-
-
-    def draw(self):
-        test = 2
-
-
-class Sim:
-    def __init__(self):
-        pygame.init()
-
-        self.clock = pygame.time.Clock() 
-
-        self.pm = ParticleManager()
-
-        self.screen = pygame.display.set_caption('EVOsim')
-        self.screen = pygame.display.set_mode(screen_size, flags=pygame.SCALED)
+def main():
+    pygame.init()
+    screen = pygame.display.set_mode((800,800))
+    clock = pygame.time.Clock()
     
-    def update(self):
-        self.pm.add([Particle((random.randinit(1,3), random.choice(['red', 'blue', 'green']), random.randit(0, screen_size.x), -10))])
-
-    def draw(self, surface):
-        surface.fill('black')
-        pygame.display.flip()
-
-    def run(self):
-        self.running = True
-
-        while self.running:
-            for event in pygame.event.get():
-                if event.type ==pygame.QUIT:
-                    self.running = False
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
             
+        screen.fill((0,0,0))
+        pygame.display.flip()
+        clock.tick(60)
 
-            self.draw(self.screen)
-
+    pygame.quit    
 
 if __name__== '__main__':
-    Sim().run()
-
+    main()
