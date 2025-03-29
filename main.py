@@ -7,8 +7,8 @@ HEIGHT = 1000
 NUM_TYPES = 3
 COLOR_STEP = 360 // NUM_TYPES
 K = 0.05
-RED_EAT_MINIMUM = 2
-BLUE_EAT_MINIMUM = 3
+RED_EAT_MINIMUM = 1
+BLUE_EAT_MINIMUM = 1
 
 FORCES = np.array([
     [-5,  0,  10], 
@@ -17,9 +17,9 @@ FORCES = np.array([
 ])
 
 MIN_DISTANCES = np.array([
-    [10, 0, 20],
+    [15, 0, 30],
     [0, 0, 0],
-    [10, 20, 10],  
+    [15, 30, 15],  
 ])
 RADII = np.array([
     [75, 0, 75],
@@ -44,7 +44,7 @@ def update_particles(positions, velocity, types, eat_counts):
             new_velocity[i] = 0, 0
             continue
 
-        for j in range(PARTICLE_NUMBER):
+        for j in range(len(pos)):
             if i != j:
                 dir_x = positions[j, 0] - pos_x
                 dir_y = positions[j, 1] - pos_y
@@ -65,11 +65,11 @@ def update_particles(positions, velocity, types, eat_counts):
                         total_force_y += dir_y * force
 
                     if dis <= 4:
-                        if p_type == 0 and other_type == 3:
+                        if p_type == 0 and other_type == 2:
                                 eat_counts[i] += 1
                                 types[j] = -1
                         
-                        if p_type == 3 and other_type == 2:
+                        if p_type == 2 and other_type == 1:
                                 eat_counts[i] += 1
                                 types[j] = -1
                         
@@ -92,6 +92,7 @@ def main():
     types = np.random.randint(0, NUM_TYPES, PARTICLE_NUMBER)
     velocity = np.zeros((PARTICLE_NUMBER, 2))
     global eat_counts
+    
     running = True
     while running:
         for event in pygame.event.get():
@@ -103,7 +104,7 @@ def main():
         pos, velocity, types, eat_counts = update_particles(pos, velocity, types, eat_counts)
 
         new_positions, new_velocities, new_types = [], [], []
-        for i in range(PARTICLE_NUMBER):
+        for i in range(len(pos)):
             if types[i] != -1: 
                 new_positions.append(pos[i])
                 new_velocities.append(velocity[i])
@@ -111,15 +112,23 @@ def main():
             
                 if types[i] == 0 and eat_counts[i] >= RED_EAT_MINIMUM:
                     new_positions.append(pos[i] + np.random.uniform(-5,5,size=2))
-                    new_velocities.append(velocity[i])
-                    new_types.append(types[i])
+                    new_velocities.append([0,0])
+                    new_types.append(0)
+                    eat_counts[i] = 0
+                
+                if types[i] == 2 and eat_counts[i] >= BLUE_EAT_MINIMUM:
+                    new_positions.append(pos[i] + np.random.uniform(-5,5,size=2))
+                    new_velocities.append([0,0])
+                    new_types.append(2)
+                    eat_counts[i] = 0
 
         pos = np.array(new_positions)
         velocity = np.array(new_velocities)
         
-        for i in range(PARTICLE_NUMBER):
-            color = pygame.Color(0, 0, 255)
-            color.hsva = (types[i] * COLOR_STEP, 100,100,100)
+        for i in range(len(pos)):
+            color = [(255,0,0),(0,255,0),(0,0,255)][types[i]]
+            #color.hsva = (types[i] * COLOR_STEP, 100,100,100)
+            print(i)
             pygame.draw.circle(screen, color, (int(pos[i, 0]), int(pos[i, 1])), 2)
         
         pygame.display.flip()
