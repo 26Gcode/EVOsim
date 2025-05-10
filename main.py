@@ -10,6 +10,8 @@ COLOR_STEP = 360 // NUM_TYPES
 K = 0.05
 RED_EAT_MINIMUM = 1
 BLUE_EAT_MINIMUM = 1
+FPS = 60
+RED_DEATH_COUNT = 10 * FPS
 
 FORCES = np.array([
     [-5,  0,  10], 
@@ -75,7 +77,7 @@ def update_particles(pos, velocity, types, eat_counts, last_eaten_timer):
                                 eat_counts[i] += 1
                                 types[j] = -1
                         
-                        if p_type == 2 and other_type == 1:
+                        elif p_type == 2 and other_type == 1:
                                 eat_counts[i] += 1
                                 types[j] = -1
                         
@@ -87,11 +89,11 @@ def update_particles(pos, velocity, types, eat_counts, last_eaten_timer):
         new_position[i] = new_pos_x, new_pos_y
         new_velocity[i] = new_vel_x, new_vel_y
 
-    return new_position, new_velocity, types, eat_counts
+    return new_position, new_velocity, types, eat_counts, last_eaten_timer
 
 def main():
     pygame.init()
-    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    screen = pygame.display.set_mode((1600, 1000))
     clock = pygame.time.Clock()
 
     pos = np.random.rand(PARTICLE_NUMBER, 2) * [WIDTH, HEIGHT]
@@ -110,28 +112,37 @@ def main():
         pos, velocity, types, eat_counts, last_eaten_timer = update_particles(pos, velocity, types, eat_counts, last_eaten_timer)
 
         new_pos, new_velocities, new_types = [], [], []
+        new_eaten_count, new_last_eaten_timer = [], []
         for i in range(len(pos)):
-            if types[i] != -1: 
+            if types[i] != -1 or (types[i] == 0 and last_eaten_timer[i] >= RED_DEATH_COUNT):
                 new_pos.append(pos[i])
                 new_velocities.append(velocity[i])
                 new_types.append(types[i])
-            
+                new_eaten_count.append(eat_counts[i])
+                new_last_eaten_timer.append(last_eaten_timer[i])
+                
                 if types[i] == 0 and eat_counts[i] >= RED_EAT_MINIMUM:
                     new_pos.append(pos[i] + np.random.uniform(-5,5,size=2))
                     new_velocities.append([0,0])
                     new_types.append(0)
-                    eat_counts[i] = 0
-                
+                    new_eaten_count.append(0)
+                    new_last_eaten_timer.append(0)
+                    eat_counts[i] -= 0
+
                 if types[i] == 2 and eat_counts[i] >= BLUE_EAT_MINIMUM:
                     new_pos.append(pos[i] + np.random.uniform(-5,5,size=2))
                     new_velocities.append([0,0])
                     new_types.append(2)
-                    eat_counts[i] = 0
+                    new_eaten_count.append(0)
+                    new_last_eaten_timer.append(0)
+                    eat_counts[i] -= 0
+                
 
         pos = np.array(new_pos)
         velocity = np.array(new_velocities)
         types = np.array(new_types)
-        
+        eat_counts = np.array(new_eaten_count)
+        last_eaten_timer = np.array(new_last_eaten_timer)
         for i in range(len(pos) - 1):
             color = [(255,0,0),(0,255,0),(0,0,255)][types[i]]
             #color.hsva = (types[i] * COLOR_STEP, 100,100,100)
@@ -139,7 +150,7 @@ def main():
             pygame.draw.circle(screen, color, (int(pos[i, 0]), int(pos[i, 1])), 2)
         
         pygame.display.flip()
-        clock.tick(60)
+        clock.tick(FPS)
 
     pygame.quit()
 
